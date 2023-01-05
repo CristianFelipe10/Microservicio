@@ -1,8 +1,7 @@
-package com.cristian.msusuarios.controllers;
+package com.cristian.mscursos.mscursos.controllers;
 
-import com.cristian.msusuarios.models.entity.Usuario;
-import com.cristian.msusuarios.services.UsuarioService;
-import org.apache.coyote.Response;
+import com.cristian.mscursos.mscursos.models.entity.Curso;
+import com.cristian.mscursos.mscursos.services.CursoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,55 +15,55 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-public class UsuarioController {
+public class CursoController {
 
     @Autowired
-    private UsuarioService service;
+    private CursoService service;
 
     @GetMapping
-    public List<Usuario> listar(){
-        return service.listar();
+    public ResponseEntity<List<Curso>> listar(){
+        return ResponseEntity.ok(service.listar());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> detalle(@PathVariable Long id){
-        Optional<Usuario> usuarioOptional = service.porId(id);
-        if(usuarioOptional.isPresent()){
-            return ResponseEntity.ok(usuarioOptional.get());
+        Optional<Curso> cursoOpt = service.porId(id);
+        if(cursoOpt.isPresent()){
+            return ResponseEntity.ok(cursoOpt.get());
         }
         return ResponseEntity.notFound().build();
     }
 
     @PostMapping
-    public ResponseEntity<?> guardar(@Valid @RequestBody Usuario usuario, BindingResult result){
+    public ResponseEntity<?> crear(@Valid @RequestBody Curso curso, BindingResult result){
         if(result.hasErrors()){
             return validar(result);
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(usuario));
+
+        Curso cursoDb = service.guardar(curso);
+        return ResponseEntity.status(HttpStatus.CREATED).body(cursoDb);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> editar(@Valid @RequestBody Usuario usuario, BindingResult result, @PathVariable Long id){
+    public ResponseEntity<?> editar(@Valid @RequestBody Curso curso, BindingResult result, @PathVariable Long id){
         if(result.hasErrors()){
             return validar(result);
         }
 
-        Optional<Usuario> usuarioOpt = service.porId(id);
-        if(usuarioOpt.isPresent()){
-            Usuario usuarioDb = usuarioOpt.get();
-            usuarioDb.setNombre(usuario.getNombre());
-            usuarioDb.setEmail(usuario.getEmail());
-            usuarioDb.setPassword(usuario.getPassword());
-            return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(usuarioDb));
+        Optional<Curso> cursoOpt = service.porId(id);
+        if(cursoOpt.isPresent()){
+            Curso cursoDb = cursoOpt.get();
+            cursoDb.setNombre(curso.getNombre());
+            return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(cursoDb));
         }
         return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminar(@PathVariable Long id){
-        Optional<Usuario> usuarioOpt = service.porId(id);
-        if(usuarioOpt.isPresent()){
-            service.eliminar(id);
+        Optional<Curso> cursoOpt = service.porId(id);
+        if(cursoOpt.isPresent()){
+            service.eliminar(cursoOpt.get().getId());
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
