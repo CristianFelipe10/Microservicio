@@ -10,10 +10,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 public class UsuarioController {
@@ -40,6 +37,13 @@ public class UsuarioController {
         if(result.hasErrors()){
             return validar(result);
         }
+
+        if(!usuario.getEmail().isEmpty() && service.existsByEmail(usuario.getEmail())){
+            return ResponseEntity.badRequest()
+                    .body(Collections
+                            .singletonMap("Error", "El correo electronico ya se encuentra registrado"));
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(service.guardar(usuario));
     }
 
@@ -52,6 +56,13 @@ public class UsuarioController {
         Optional<Usuario> usuarioOpt = service.porId(id);
         if(usuarioOpt.isPresent()){
             Usuario usuarioDb = usuarioOpt.get();
+            if(!usuario.getEmail().isEmpty()
+                    && !usuario.getEmail().equalsIgnoreCase(usuarioDb.getEmail())
+                    && service.getByEmail(usuario.getEmail()).isPresent()){
+                return ResponseEntity.badRequest()
+                        .body(Collections
+                                .singletonMap("Error", "El correo electronico ya se encuentra registrado"));
+            }
             usuarioDb.setNombre(usuario.getNombre());
             usuarioDb.setEmail(usuario.getEmail());
             usuarioDb.setPassword(usuario.getPassword());
@@ -68,6 +79,11 @@ public class UsuarioController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/usuarios-por-curso")
+    public ResponseEntity<?> obtenerAlumnosPorCurso(@RequestParam List<Long> ids){
+        return ResponseEntity.ok(service.listarPorIds(ids));
     }
 
     private static ResponseEntity<Map<String, String>> validar(BindingResult result) {

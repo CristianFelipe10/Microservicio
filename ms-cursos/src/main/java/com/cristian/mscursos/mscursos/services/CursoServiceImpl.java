@@ -1,6 +1,9 @@
 package com.cristian.mscursos.mscursos.services;
 
+import com.cristian.mscursos.mscursos.clients.UsuarioClientRest;
+import com.cristian.mscursos.mscursos.models.Usuario;
 import com.cristian.mscursos.mscursos.models.entity.Curso;
+import com.cristian.mscursos.mscursos.models.entity.CursoUsuario;
 import com.cristian.mscursos.mscursos.repositories.CursoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,12 +11,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CursoServiceImpl implements CursoService{
 
     @Autowired
     private CursoRepository repository;
+
+    @Autowired
+    private UsuarioClientRest client;
 
     @Override
     @Transactional(readOnly = true)
@@ -28,6 +35,24 @@ public class CursoServiceImpl implements CursoService{
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Optional<Curso> porIdconDetalle(Long id) {
+        Optional<Curso> cursoOptional = repository.findById(id);
+        if(cursoOptional.isPresent()){
+            Curso curso = cursoOptional.get();
+            if(!curso.getCursoUsuarios().isEmpty()){
+                List<Long> ids = curso.getCursoUsuarios().stream().map(CursoUsuario::getUsuarioId)
+                        .collect(Collectors.toList());
+
+                List<Usuario> usuarios = client.obtenerAlumnosPorCurso(ids);
+                curso.setUsuarios(usuarios);
+            }
+            return Optional.of(curso);
+        }
+        return Optional.empty();
+    }
+
+    @Override
     @Transactional
     public Curso guardar(Curso curso) {
         return repository.save(curso);
@@ -38,4 +63,69 @@ public class CursoServiceImpl implements CursoService{
     public void eliminar(Long id) {
         repository.deleteById(id);
     }
+
+    @Override
+    @Transactional
+    public void eliminarCursoUsuarioPorId(Long id) {
+        repository.eliminarCursoUsuarioPorId(id);
+    }
+
+    @Override
+    @Transactional
+    public Optional<Usuario> asignarUsuario(Usuario usuario, Long cursoId) {
+        Optional<Curso> cursoOpt = repository.findById(cursoId);
+        if(cursoOpt.isPresent()){
+            Usuario usuarioMs = client.detalle(usuario.getId());
+
+            Curso curso = cursoOpt.get();
+            CursoUsuario cursoUsuario = new CursoUsuario();
+            cursoUsuario.setUsuarioId(usuarioMs.getId());
+
+            curso.addCursoUsuario(cursoUsuario);
+            repository.save(curso);
+
+            return Optional.of(usuarioMs);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public Optional<Usuario> crearUsuario(Usuario usuario, Long cursoId) {
+        Optional<Curso> cursoOpt = repository.findById(cursoId);
+        if(cursoOpt.isPresent()){
+            Usuario usuarioMs = client.crear(usuario);
+
+            Curso curso = cursoOpt.get();
+            CursoUsuario cursoUsuario = new CursoUsuario();
+            cursoUsuario.setUsuarioId(usuarioMs.getId());
+
+            curso.addCursoUsuario(cursoUsuario);
+            repository.save(curso);
+
+            return Optional.of(usuarioMs);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    @Transactional
+    public Optional<Usuario> eliminarUsuario(Usuario usuario, Long cursoId) {
+        Optional<Curso> cursoOpt = repository.findById(cursoId);
+        if(cursoOpt.isPresent()){
+            Usuario usuarioMs = client.detalle(usuario.getId());
+
+            Curso curso = cursoOpt.get();
+            CursoUsuario cursoUsuario = new CursoUsuario();
+            cursoUsuario.setUsuarioId(usuarioMs.getId());
+
+            curso.removeCursoUsuario(cursoUsuario);
+            repository.save(curso);
+
+            return Optional.of(usuarioMs);
+        }
+        return Optional.empty();
+    }
+
+
 }
