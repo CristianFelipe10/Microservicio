@@ -1,0 +1,24 @@
+Imagenes
+docker build -t usuarios . -f .\ms-usuarios\Dockerfile Construir imagen. -t Etiqueta la imagen puedes ser para 
+dar un versionanmiento
+docker images Ver imagenes
+docker run -p 8002:8002 4f2ceb9f7446 Correr imagen con el id y en el puerto interno y externo 8002
+docker rmi (idimagen) elimina la imagen
+docker image prune elimina todas las imagenes que no se estan utilizando en contenedores
+docker image inspect analiza la imagen
+ 
+contenedores
+docker ps Ver contenedores activos  docker ps -a Ver contenedores inactivos y activos
+docker stop 6e693af1837a Detener contenedor con el id
+docker run --name (nombre) pone un nombre al contenedor
+docker rm (idcontenedor) elimina el contenedor
+container prune elimina todos los contenedores que no se estan utilizando o en estado exited
+docker container inspect para analizar el contenedor
+docke start reiniciamos un contenedor en estado detenido (exited)
+docker run -d -p 8001:8001 id_imagen ejecuta el contenedor en segundo plano y no bloquea el terminal o cmd
+docker logs id_container logs del contenedor 
+
+help 
+docker --help muestra ayuda de los comandos
+docker image --help
+docker container --help
